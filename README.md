@@ -10,10 +10,7 @@ TOC:
                                  service accounts can be created for additional linux system management.
 
 
-   Note: Inventory file will target server group [Linux_systems] and should be provided with -i and linux system password via --ask-pass.
-
-
-   This configuration, took about 14 hours to complete over Q3 2023 for Linux admin AD System integration.
-
-   Documentation shared on this portal has been edeited and not-tested after removing production/customer environment details and is provided as a technical gallery/portfolio.  
+2.  Note: Inventory file will target server group [Linux_systems] and should be provided with -i and linux system password via --ask-pass.
+2.2 This configuration, took about 14 hours to complete over Q3 2023 for Linux admin AD System integration.
+2.3 Documentation shared on this portal has been edeited and not-tested after removing production/customer environment details and is provided as a technical gallery/portfolio.  
    Execute in your own environment or in production at your own risk (Or just dont without technical expertise into these technologies).  
