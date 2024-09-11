@@ -1,0 +1,73 @@
+---
+- name: Configure Ubuntu System for remote SSH after joining Active Directory Domain
+  hosts: Linux_Systems
+  become: yes
+
+  tasks:
+    - name: Update SSHD with AuthorizedKeysCommands
+      lineinfile:
+        dest: /etc/ssh/sshd_config
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+        state: present
+        insertafter: EOF
+      loop:
+        - { regexp: '^#?(AuthorizedKeysCommand) ', line: 'AuthorizedKeysCommand /usr/bin/sss_ssh_authorizedkeys' }
+        - { regexp: '^#?(AuthorizedKeysCommandUser) ', line: 'AuthorizedKeysCommandUser nobody' }
+        - { regexp: '^#?(PubkeyAuthentication) ', line: 'PubkeyAuthentication yes' }
+      retries: 3
+      delay: 1
+      notify:
+        - Restart sshd      
+
+    - name: Update /etc/sudoers to add Domain Admins group
+      lineinfile:
+        path: /etc/sudoers
+        state: present
+        line: '%Domain\ Admins ALL=(ALL:ALL) NOPASSWD:ALL'
+
+    - name: Update SSSD Configuration
+      lineinfile: 
+        path: /etc/sssd/sssd.conf
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+        state: present
+      loop:
+        - { regexp: '^#?(fallback_homedir) =', line: 'fallback_homedir = /home/%u' }
+        - { regexp: '^#?(use_fully_qualified_names) =', line: 'use_fully_qualified_names = False' }
+        - { regexp: '^#?(ldap_user_extra_attrs) =', line: 'ldap_user_extra_attrs = altSecurityIdentities' }
+        - { regexp: '^#?(ldap_user_ssh_public_key) =', line: 'ldap_user_ssh_public_key = altSecurityIdentities' }
+        - { regexp: '^#?(services) =', line: 'services = nss, pam, ssh' }
+      delay: 1
+      notify:
+        - Restart sssd
+
+##     lineinfile:
+  #      path: /etc/ntp.conf
+   #     regexp: '^server '
+    #    line: 'server {{ ad_dc }} iburst'
+     #   insertafter: EOF
+      #  state: present
+       # notify:
+        # - Restart ntp
+
+  handlers:
+    - name: Restart systemd-resolved
+      service:
+        name: systemd-resolved
+        state: restarted
+
+    - name: Restart sshd
+      service:
+        name: sshd
+        state: restarted
+
+    - name: Restart ntp
+      service:
+        name: ntp
+        state: restarted
+
+    - name: Restart sssd
+      service:
+        name: sssd
+        state: restarted

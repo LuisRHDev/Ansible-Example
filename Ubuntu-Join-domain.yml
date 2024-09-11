@@ -1,0 +1,65 @@
+---
+- name: Join Ubuntu System to Active Directory Domain
+  hosts: Linux_Systems
+  become: yes
+
+  vars_prompt:
+    - name: ad_admin_user
+      prompt: "Enter AD user w/ Domain Admin Creds"
+    
+    - name: ad_admin_password
+      prompt: "Enter AD admin password"
+      private: yes
+
+    - name: ad_domain
+      prompt: "Enter Domain Name"
+
+    - name: ad_dnsii
+      prompt: "Enter Fail Over DNS"
+
+    - name: ad_dc
+      prompt: "Enter name or ip of DC"
+
+
+  tasks:
+    - name: Update DNS settings in /etc/systemd/resolved.conf
+      lineinfile:
+        dest: /etc/systemd/resolved.conf
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+        state: present
+      loop:
+        - { regexp: '^#?(DNS)=', line: 'DNS={{ ad_dc }}' }
+        - { regexp: '^#?(FallbackDNS)=', line: 'FallbackDNS={{ ad_dnsii }}' }
+        - { regexp: '^#?(Domains)=', line: 'Domains={{ ad_domain }}' }
+      delay: 1
+      notify:
+        - Restart systemd-resolved    
+
+    - name: Install required packages
+      apt:
+        name:
+          - realmd
+          - sssd
+          - sssd-tools
+          - krb5-user
+          - libpam-krb5
+          - samba-common
+          - samba-common-bin
+          - libkrb5-3
+          - oddjob
+          - oddjob-mkhomedir
+          - adcli
+          - ntp
+        state: present
+        update_cache: yes
+
+    - name: Join the machine to the domain
+      shell: "sudo realm join --user={{ ad_admin_user }} {{ ad_domain }} --password '{{ ad_admin_password }}' | 
+      register: join_result
+
+  handlers:
+    - name: Restart systemd-resolved
+      service:
+        name: systemd-resolved
+        state: restarted
