@@ -1,7 +1,7 @@
 Modified production environment ansible configuration files, that will deploy infrastructure as code: 
 
 TOC:
-1. **Ubuntu Server Joine AD Domain and with additional configuration ** provide remote SSH access through AD Centrally stored/managed KEYS: 
+1. **Ubuntu Server Join AD Domain and AD user remote access** provides remote SSH access through AD Centrally stored/managed KEYS: 
 
 1.1 **Ubuntu-Join-Domain.yml**  : Prompt's user for credentials and Join's linux workstation to prompted AD Domain.
                                 Install's all necessary packages for Samba, NTP and LDAP Kerberose linux client functionality. 
